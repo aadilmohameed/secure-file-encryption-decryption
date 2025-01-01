@@ -1,0 +1,70 @@
+from Crypto.Protocol.KDF import PBKDF2
+from Crypto.Util.Padding import pad, unpad
+from Crypto.Random import get_random_bytes
+import os
+# Derive a secure key using PBKDF2
+def derive_key(passphrase, salt, iterations=100000):
+return PBKDF2(passphrase, salt, dkLen=16, count=iterations)
+# Encrypt a file
+def encrypt_file(file_path, passphrase):
+try:
+with open(file_path, 'rb') as f:
+data = f.read()
+# Generate salt and derive key
+salt = get_random_bytes(16)
+key = derive_key(passphrase, salt)
+iv = get_random_bytes(AES.block_size)
+# Encrypt data
+cipher = AES.new(key, AES.MODE_CBC, iv)
+padded_data = pad(data, AES.block_size)
+encrypted_data = salt + iv + cipher.encrypt(padded_data)
+# Write encrypted data to a new file
+with open(file_path + ".enc", 'wb') as f:
+f.write(encrypted_data)
+print(f"File encrypted successfully: {file_path}.enc")
+except Exception as e:
+print(f"Error during encryption: {e}")
+# Decrypt a file
+def decrypt_file(file_path, passphrase):
+try:
+with open(file_path, 'rb') as f:
+encrypted_data = f.read()
+# Extract salt, IV, and encrypted data
+salt = encrypted_data[:16]
+iv = encrypted_data[16:16 + AES.block_size]
+cipher_text = encrypted_data[16 + AES.block_size:]
+# Derive key and decrypt data
+key = derive_key(passphrase, salt)
+cipher = AES.new(key, AES.MODE_CBC, iv)
+decrypted_data = unpad(cipher.decrypt(cipher_text), AES.block_size)
+# Write decrypted data to a new file
+output_file = file_path.replace(".enc", "")
+with open(output_file, 'wb') as f:
+f.write(decrypted_data)
+print(f"File decrypted successfully: {output_file}")
+except ValueError:
+print("Incorrect passphrase or corrupted file.")
+except Exception as e:
+print(f"Error during decryption: {e}")
+# Main function to run the program
+def main():
+print("Secure File Encryption and Decryption System")
+print("1. Encrypt a file")
+print("2. Decrypt a file")
+choice = input("Enter your choice (1 or 2): ").strip()
+file_path = input("Enter the file path: ").strip()
+if not os.path.exists(file_path):
+print("File does not exist.")
+return
+passphrase = input("Enter a secure passphrase: ").strip()
+if not passphrase:
+print("Passphrase cannot be empty.")
+return
+if choice == '1':
+encrypt_file(file_path, passphrase)
+elif choice == '2':
+decrypt_file(file_path, passphrase)
+else:
+print("Invalid choice. Please select 1 or 2.")
+if __name__ == "__main__":
+main()
